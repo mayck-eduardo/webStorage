@@ -1,5 +1,8 @@
 // --- 1. ESTRUTURA DE DADOS COMPLETA (66 Livros / 1189 Capítulos) ---
 
+// NOTA: A estrutura BIBLE_STRUCTURE permanece a mesma, pois as chaves "gn 1", "ex 2"
+// são essenciais para o JSON de backup e para a lógica interna. A mudança é apenas na exibição.
+
 const BIBLE_STRUCTURE = {
     "GENESIS": {
         "gn 1": false, "gn 2": false, "gn 3": false, "gn 4": false, "gn 5": false, "gn 6": false, "gn 7": false, "gn 8": false, "gn 9": false, "gn 10": false, "gn 11": false, "gn 12": false, "gn 13": false, "gn 14": false, "gn 15": false, "gn 16": false, "gn 17": false, "gn 18": false, "gn 19": false, "gn 20": false, "gn 21": false, "gn 22": false, "gn 23": false, "gn 24": false, "gn 25": false, "gn 26": false, "gn 27": false, "gn 28": false, "gn 29": false, "gn 30": false, "gn 31": false, "gn 32": false, "gn 33": false, "gn 34": false, "gn 35": false, "gn 36": false, "gn 37": false, "gn 38": false, "gn 39": false, "gn 40": false, "gn 41": false, "gn 42": false, "gn 43": false, "gn 44": false, "gn 45": false, "gn 46": false, "gn 47": false, "gn 48": false, "gn 49": false, "gn 50": false
@@ -204,7 +207,7 @@ const BIBLE_STRUCTURE = {
 let progressData = {};
 const TOTAL_CHAPTERS = 1189; 
 
-// --- 2. FUNÇÕES DE ARMAZENAMENTO E CÁLCULO ---
+// --- 2. FUNÇÕES DE ARMAZENAMENTO E CÁLCULO (sem alterações) ---
 
 function loadProgress() {
     const savedData = localStorage.getItem('bibleProgress');
@@ -243,7 +246,32 @@ function calculateProgress() {
     return { chaptersRead, percentage: percentage.toFixed(2) };
 }
 
-// --- 3. FUNÇÕES DE INTERFACE (UI) ---
+// --- NOVO: FUNÇÃO PARA MARCAR LIVRO INTEIRO ---
+
+function toggleBookStatus(bookName) {
+    // 1. Verifica o status atual do livro: Se todos os capítulos estão lidos, o novo status será FALSE.
+    // Se pelo menos um não estiver lido, o novo status será TRUE (lido).
+    const chapters = progressData[bookName];
+    if (!chapters) return; // Garante que o livro existe
+
+    // Verifica se todos estão TRUE (lidos)
+    const isBookComplete = Object.values(chapters).every(status => status === true);
+    
+    // O novo status será o oposto do status completo
+    const newStatus = !isBookComplete;
+
+    // 2. Aplica o novo status a todos os capítulos
+    for (const chapterKey in chapters) {
+        chapters[chapterKey] = newStatus;
+    }
+
+    saveProgress(); // Salva e atualiza UI
+    // O alert é opcional, mas útil para feedback imediato no celular:
+    alert(`Livro "${bookName}" marcado como ${newStatus ? 'LIDO' : 'NÃO LIDO'}.`);
+}
+
+
+// --- 3. FUNÇÕES DE INTERFACE (UI) (ALTERADA) ---
 
 function updateUI() {
     const { chaptersRead, percentage } = calculateProgress();
@@ -264,15 +292,44 @@ function renderChapters() {
         const bookDiv = document.createElement('div');
         bookDiv.className = 'book';
         
-        const chapterCount = Object.keys(progressData[bookName]).length;
-        const readCount = Object.values(progressData[bookName]).filter(c => c === true).length;
+        const chapters = progressData[bookName];
+        const chapterCount = Object.keys(chapters).length;
+        const readCount = Object.values(chapters).filter(c => c === true).length;
+        const isBookComplete = readCount === chapterCount;
         
-        bookDiv.innerHTML = `<h3>${bookName} <small>(${readCount}/${chapterCount})</small></h3>`;
+        // CUIDADO: O innerHTML é usado aqui para simplificar a injeção do botão.
+        bookDiv.innerHTML = `
+            <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                ${bookName} 
+                <small>(${readCount}/${chapterCount})</small>
+            </h3>
+            <button 
+                onclick="toggleBookStatus('${bookName}')" 
+                style="
+                    padding: 8px 12px; 
+                    margin-bottom: 15px;
+                    border: none;
+                    border-radius: 5px;
+                    background-color: ${isBookComplete ? '#E57373' : '#66BB6A'};
+                    color: white;
+                    cursor: pointer;
+                    font-weight: bold;
+                "
+            >
+                ${isBookComplete ? 'NÃO LIDO' : 'LIDO'}
+            </button>
+            <div id="${bookName.replace(/\s/g, '_')}Chapters"></div>
+        `;
 
-        for (const chapterKey in progressData[bookName]) {
+        const chaptersContainer = bookDiv.querySelector(`#${bookName.replace(/\s/g, '_')}Chapters`);
+
+        for (const chapterKey in chapters) {
             const chapterButton = document.createElement('span');
             chapterButton.className = 'chapter-btn';
-            chapterButton.textContent = chapterKey; 
+            
+            // ALTERAÇÃO AQUI: Remove a sigla e mantém apenas o número
+            const chapterNumber = chapterKey.split(' ')[1]; 
+            chapterButton.textContent = chapterNumber; 
 
             if (progressData[bookName][chapterKey] === true) {
                 chapterButton.classList.add('read');
@@ -286,13 +343,13 @@ function renderChapters() {
                 };
             })(bookName, chapterKey);
 
-            bookDiv.appendChild(chapterButton);
+            chaptersContainer.appendChild(chapterButton);
         }
         container.appendChild(bookDiv);
     }
 }
 
-// --- 4. FUNÇÃO DE BACKUP (EXPORTAR) ---
+// --- 4. FUNÇÃO DE BACKUP (EXPORTAR) (sem alterações) ---
 
 function downloadJson() {
     const dataStr = JSON.stringify(progressData, null, 4);
@@ -309,7 +366,7 @@ function downloadJson() {
     alert("Backup 'bible_progress_backup.json' gerado e baixado.");
 }
 
-// --- 5. FUNÇÃO DE IMPORTAÇÃO (UPLOAD) ---
+// --- 5. FUNÇÃO DE IMPORTAÇÃO (UPLOAD) (sem alterações) ---
 
 function handleImport(event) {
     const file = event.target.files[0];
