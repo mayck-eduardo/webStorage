@@ -318,6 +318,8 @@ function renderChapters() {
         const readCount = Object.values(chapters).filter(c => c === true).length;
         const isBookComplete = readCount === chapterCount;
         
+ const validId = `L${bookName.replace(/\s/g, '_')}Chapters`; 
+
         bookDiv.innerHTML = `
             <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 ${bookName} 
@@ -338,10 +340,11 @@ function renderChapters() {
             >
                 ${isBookComplete ? 'Marcar como NÃO LIDO' : 'Marcar como LIDO'}
             </button>
-            <div id="${bookName.replace(/\s/g, '_')}Chapters"></div>
+            <div id="${validId}"></div>
         `;
 
-        const chaptersContainer = bookDiv.querySelector(`#${bookName.replace(/\s/g, '_')}Chapters`);
+        // Busca o elemento com o ID validado
+        const chaptersContainer = bookDiv.querySelector(`#${validId}`);
 
         for (const chapterKey in chapters) {
             const chapterButton = document.createElement('span');
