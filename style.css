@@ -1,0 +1,118 @@
+/* Variáveis de cor para tema escuro */
+:root {
+    --bg-color: #1a1a1a;
+    --card-bg: #2c2c2c;
+    --text-color: #f0f0f0;
+    --border-color: #444;
+    --progress-bar-bg: #555;
+    --progress-fill-color: #4CAF50; /* Verde para progresso */
+    --button-primary: #007bff;
+    --button-secondary: #ff9800;
+    --chapter-read: #4CAF50; /* Verde para lido */
+    --chapter-unread: #444; /* Cinza escuro para não lido */
+}
+
+/* Estilos globais */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    padding: 20px; 
+    background-color: var(--bg-color); 
+    color: var(--text-color);
+}
+
+h1 { color: var(--text-color); }
+h3 { color: var(--text-color); }
+
+/* Barra de Progresso */
+.progress-bar { 
+    height: 30px; 
+    background-color: var(--progress-bar-bg); 
+    border-radius: 5px; 
+    margin-bottom: 25px; 
+    overflow: hidden; 
+}
+.progress-fill { 
+    height: 100%; 
+    background-color: var(--progress-fill-color); 
+    border-radius: 5px; 
+    transition: width 0.4s ease-out; 
+    line-height: 30px; 
+    text-align: center; 
+    color: white; 
+    font-weight: bold; 
+}
+
+/* Cartões de Livro */
+.book { 
+    margin-bottom: 20px; 
+    padding: 15px; 
+    border-radius: 8px; 
+    background-color: var(--card-bg); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+.book h3 { 
+    margin-top: 0; 
+    border-bottom: 2px solid var(--border-color); 
+    padding-bottom: 10px; 
+}
+
+/* Botões de Capítulo */
+.chapter-btn { 
+    padding: 8px 12px; 
+    margin: 5px 3px; 
+    border: 1px solid var(--border-color); 
+    cursor: pointer; 
+    display: inline-block; 
+    background-color: var(--chapter-unread);
+    color: var(--text-color);
+    border-radius: 50px; 
+    font-size: 0.9em; 
+    user-select: none;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.chapter-btn:hover { background-color: #666; }
+.chapter-btn.read { 
+    background-color: var(--chapter-read); 
+    color: white; 
+    border-color: var(--chapter-read); 
+}
+.chapter-btn.read:hover { background-color: #45a049; }
+
+/* Cabeçalho e Botões de Ação */
+.header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 15px; 
+    flex-wrap: wrap; 
+}
+.header button { 
+    padding: 10px 15px; 
+    margin: 5px 0; 
+    font-size: 1em; 
+    border-radius: 5px; 
+    border: none; 
+    cursor: pointer; 
+    font-weight: bold;
+}
+#backupBtn { 
+    background-color: var(--button-primary); 
+    color: white; 
+}
+#importLabel { 
+    background-color: var(--button-secondary); 
+    color: #1a1a1a; 
+    display: inline-block; 
+    padding: 10px 15px; 
+    border-radius: 5px; 
+    cursor: pointer; 
+    margin: 5px 10px 5px 0; 
+    font-weight: bold;
+}
+#importInput { display: none; }
+
+/* Estilos para o botão de livro inteiro */
+.book > button {
+    font-size: 0.9em;
+}

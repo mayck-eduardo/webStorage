@@ -1,8 +1,5 @@
 // --- 1. ESTRUTURA DE DADOS COMPLETA (66 Livros / 1189 Capítulos) ---
 
-// NOTA: A estrutura BIBLE_STRUCTURE permanece a mesma, pois as chaves "gn 1", "ex 2"
-// são essenciais para o JSON de backup e para a lógica interna. A mudança é apenas na exibição.
-
 const BIBLE_STRUCTURE = {
     "GENESIS": {
         "gn 1": false, "gn 2": false, "gn 3": false, "gn 4": false, "gn 5": false, "gn 6": false, "gn 7": false, "gn 8": false, "gn 9": false, "gn 10": false, "gn 11": false, "gn 12": false, "gn 13": false, "gn 14": false, "gn 15": false, "gn 16": false, "gn 17": false, "gn 18": false, "gn 19": false, "gn 20": false, "gn 21": false, "gn 22": false, "gn 23": false, "gn 24": false, "gn 25": false, "gn 26": false, "gn 27": false, "gn 28": false, "gn 29": false, "gn 30": false, "gn 31": false, "gn 32": false, "gn 33": false, "gn 34": false, "gn 35": false, "gn 36": false, "gn 37": false, "gn 38": false, "gn 39": false, "gn 40": false, "gn 41": false, "gn 42": false, "gn 43": false, "gn 44": false, "gn 45": false, "gn 46": false, "gn 47": false, "gn 48": false, "gn 49": false, "gn 50": false
@@ -207,15 +204,25 @@ const BIBLE_STRUCTURE = {
 let progressData = {};
 const TOTAL_CHAPTERS = 1189; 
 
-// --- 2. FUNÇÕES DE ARMAZENAMENTO E CÁLCULO (sem alterações) ---
+// --- FUNÇÕES DE ARMAZENAMENTO E CÁLCULO ---
 
 function loadProgress() {
     const savedData = localStorage.getItem('bibleProgress');
     if (savedData) {
         try {
+            // Tenta carregar o progresso salvo
             progressData = JSON.parse(savedData);
+            
+            // Corrige e mescla dados: usa a estrutura completa como base e aplica o progresso salvo
+            progressData = { ...BIBLE_STRUCTURE, ...progressData };
+            for(const book in BIBLE_STRUCTURE) {
+                if(progressData[book]) {
+                    progressData[book] = { ...BIBLE_STRUCTURE[book], ...progressData[book] };
+                }
+            }
         } catch (e) {
             console.error("Erro ao carregar progresso do localStorage:", e);
+            // Em caso de erro, usa a estrutura base
             progressData = BIBLE_STRUCTURE;
         }
     } else {
@@ -246,32 +253,24 @@ function calculateProgress() {
     return { chaptersRead, percentage: percentage.toFixed(2) };
 }
 
-// --- NOVO: FUNÇÃO PARA MARCAR LIVRO INTEIRO ---
+// --- FUNÇÃO PARA MARCAR LIVRO INTEIRO ---
 
 function toggleBookStatus(bookName) {
-    // 1. Verifica o status atual do livro: Se todos os capítulos estão lidos, o novo status será FALSE.
-    // Se pelo menos um não estiver lido, o novo status será TRUE (lido).
     const chapters = progressData[bookName];
-    if (!chapters) return; // Garante que o livro existe
+    if (!chapters) return; 
 
-    // Verifica se todos estão TRUE (lidos)
     const isBookComplete = Object.values(chapters).every(status => status === true);
-    
-    // O novo status será o oposto do status completo
     const newStatus = !isBookComplete;
 
-    // 2. Aplica o novo status a todos os capítulos
     for (const chapterKey in chapters) {
         chapters[chapterKey] = newStatus;
     }
 
-    saveProgress(); // Salva e atualiza UI
-    // O alert é opcional, mas útil para feedback imediato no celular:
+    saveProgress(); 
     alert(`Livro "${bookName}" marcado como ${newStatus ? 'LIDO' : 'NÃO LIDO'}.`);
 }
 
-
-// --- 3. FUNÇÕES DE INTERFACE (UI) (ALTERADA) ---
+// --- FUNÇÕES DE INTERFACE (UI) ---
 
 function updateUI() {
     const { chaptersRead, percentage } = calculateProgress();
@@ -289,6 +288,8 @@ function renderChapters() {
     container.innerHTML = ''; 
 
     for (const bookName in progressData) {
+        if (!BIBLE_STRUCTURE.hasOwnProperty(bookName)) continue; // Garantia de estrutura
+
         const bookDiv = document.createElement('div');
         bookDiv.className = 'book';
         
@@ -297,14 +298,14 @@ function renderChapters() {
         const readCount = Object.values(chapters).filter(c => c === true).length;
         const isBookComplete = readCount === chapterCount;
         
-        // CUIDADO: O innerHTML é usado aqui para simplificar a injeção do botão.
+        // Injeta o cabeçalho e o botão de toggle
         bookDiv.innerHTML = `
             <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 ${bookName} 
                 <small>(${readCount}/${chapterCount})</small>
             </h3>
             <button 
-                onclick="toggleBookStatus('${bookName}')" 
+                onclick="toggleBookStatus('${bookName.replace(/'/g, "\\'")}')" 
                 style="
                     padding: 8px 12px; 
                     margin-bottom: 15px;
@@ -316,7 +317,7 @@ function renderChapters() {
                     font-weight: bold;
                 "
             >
-                ${isBookComplete ? 'NÃO LIDO' : 'LIDO'}
+                ${isBookComplete ? 'Marcar como NÃO LIDO' : 'Marcar como LIDO'}
             </button>
             <div id="${bookName.replace(/\s/g, '_')}Chapters"></div>
         `;
@@ -327,7 +328,7 @@ function renderChapters() {
             const chapterButton = document.createElement('span');
             chapterButton.className = 'chapter-btn';
             
-            // ALTERAÇÃO AQUI: Remove a sigla e mantém apenas o número
+            // Remove a sigla e mantém apenas o número (ex: 1, 2, 3)
             const chapterNumber = chapterKey.split(' ')[1]; 
             chapterButton.textContent = chapterNumber; 
 
@@ -335,7 +336,7 @@ function renderChapters() {
                 chapterButton.classList.add('read');
             }
 
-            // Adiciona o evento de clique para marcar/desmarcar
+            // Adiciona o evento de clique
             chapterButton.onclick = (function(bName, cKey) {
                 return function() {
                     progressData[bName][cKey] = !progressData[bName][cKey];
@@ -349,7 +350,7 @@ function renderChapters() {
     }
 }
 
-// --- 4. FUNÇÃO DE BACKUP (EXPORTAR) (sem alterações) ---
+// --- FUNÇÃO DE BACKUP (EXPORTAR) ---
 
 function downloadJson() {
     const dataStr = JSON.stringify(progressData, null, 4);
@@ -366,7 +367,7 @@ function downloadJson() {
     alert("Backup 'bible_progress_backup.json' gerado e baixado.");
 }
 
-// --- 5. FUNÇÃO DE IMPORTAÇÃO (UPLOAD) (sem alterações) ---
+// --- FUNÇÃO DE IMPORTAÇÃO (UPLOAD) ---
 
 function handleImport(event) {
     const file = event.target.files[0];
@@ -392,5 +393,5 @@ function handleImport(event) {
     event.target.value = null; 
 }
 
-// --- 6. INICIALIZAÇÃO ---
+// --- INICIALIZAÇÃO ---
 window.onload = loadProgress;
