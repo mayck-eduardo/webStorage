@@ -1,5 +1,9 @@
 // --- 1. ESTRUTURA DE DADOS COMPLETA (66 Livros / 1189 Capítulos) ---
 
+const BIBLE_STORAGE_KEY = 'bibleProgress_EngComp_Final'; // Chave mais exclusiva
+const TOTAL_CHAPTERS = 1189; 
+let progressData = {}; 
+
 const BIBLE_STRUCTURE = {
     "GENESIS": {
         "gn 1": false, "gn 2": false, "gn 3": false, "gn 4": false, "gn 5": false, "gn 6": false, "gn 7": false, "gn 8": false, "gn 9": false, "gn 10": false, "gn 11": false, "gn 12": false, "gn 13": false, "gn 14": false, "gn 15": false, "gn 16": false, "gn 17": false, "gn 18": false, "gn 19": false, "gn 20": false, "gn 21": false, "gn 22": false, "gn 23": false, "gn 24": false, "gn 25": false, "gn 26": false, "gn 27": false, "gn 28": false, "gn 29": false, "gn 30": false, "gn 31": false, "gn 32": false, "gn 33": false, "gn 34": false, "gn 35": false, "gn 36": false, "gn 37": false, "gn 38": false, "gn 39": false, "gn 40": false, "gn 41": false, "gn 42": false, "gn 43": false, "gn 44": false, "gn 45": false, "gn 46": false, "gn 47": false, "gn 48": false, "gn 49": false, "gn 50": false
@@ -201,19 +205,16 @@ const BIBLE_STRUCTURE = {
     }
 };
 
-let progressData = {};
-const TOTAL_CHAPTERS = 1189; 
-
 // --- FUNÇÕES DE ARMAZENAMENTO E CÁLCULO ---
 
 function loadProgress() {
-    const savedData = localStorage.getItem('bibleProgress');
+    const savedData = localStorage.getItem(BIBLE_STORAGE_KEY);
     if (savedData) {
         try {
-            // Tenta carregar o progresso salvo
             progressData = JSON.parse(savedData);
             
             // Corrige e mescla dados: usa a estrutura completa como base e aplica o progresso salvo
+            // Isso garante que os 66 livros estejam sempre presentes.
             progressData = { ...BIBLE_STRUCTURE, ...progressData };
             for(const book in BIBLE_STRUCTURE) {
                 if(progressData[book]) {
@@ -222,7 +223,6 @@ function loadProgress() {
             }
         } catch (e) {
             console.error("Erro ao carregar progresso do localStorage:", e);
-            // Em caso de erro, usa a estrutura base
             progressData = BIBLE_STRUCTURE;
         }
     } else {
@@ -232,7 +232,7 @@ function loadProgress() {
 }
 
 function saveProgress() {
-    localStorage.setItem('bibleProgress', JSON.stringify(progressData));
+    localStorage.setItem(BIBLE_STORAGE_KEY, JSON.stringify(progressData));
     updateUI(); 
 }
 
@@ -251,6 +251,21 @@ function calculateProgress() {
     }
     const percentage = (chaptersRead / TOTAL_CHAPTERS) * 100;
     return { chaptersRead, percentage: percentage.toFixed(2) };
+}
+
+// --- NOVO: FUNÇÃO PARA LIMPEZA FORÇADA ---
+function clearStorageAndReload() {
+    if (confirm("ATENÇÃO: Isso limpará TODO o seu progresso salvo, forçando o aplicativo a recarregar a lista completa. Você tem um backup recente?")) {
+        // Limpa apenas a chave do progresso bíblico
+        localStorage.removeItem(BIBLE_STORAGE_KEY); 
+        
+        // Limpa quaisquer chaves antigas que possam estar causando conflito
+        localStorage.removeItem('bibleProgress'); // Chave antiga 1
+        localStorage.removeItem('bibleProgressV2_Final'); // Chave antiga 2
+
+        alert("Progresso limpo. Recarregando a lista completa.");
+        window.location.reload(true); // Recarrega a página forçando o cache (opcional, mas recomendado)
+    }
 }
 
 // --- FUNÇÃO PARA MARCAR LIVRO INTEIRO ---
@@ -287,8 +302,13 @@ function renderChapters() {
     const container = document.getElementById('booksContainer');
     container.innerHTML = ''; 
 
+    // Adiciona o botão de limpeza logo abaixo do contêiner de livros (pode ser movido depois)
+    const clearButtonDiv = document.createElement('div');
+    clearButtonDiv.innerHTML = `<button onclick="clearStorageAndReload()" style="background-color: #f44336; color: white; padding: 10px; border: none; border-radius: 5px; margin-bottom: 20px; font-weight: bold; width: 100%;">LIMPAR TODO O PROGRESSO (Se algo quebrar)</button>`;
+    container.appendChild(clearButtonDiv);
+    
     for (const bookName in progressData) {
-        if (!BIBLE_STRUCTURE.hasOwnProperty(bookName)) continue; // Garantia de estrutura
+        if (!BIBLE_STRUCTURE.hasOwnProperty(bookName)) continue; 
 
         const bookDiv = document.createElement('div');
         bookDiv.className = 'book';
@@ -298,7 +318,6 @@ function renderChapters() {
         const readCount = Object.values(chapters).filter(c => c === true).length;
         const isBookComplete = readCount === chapterCount;
         
-        // Injeta o cabeçalho e o botão de toggle
         bookDiv.innerHTML = `
             <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 ${bookName} 
@@ -328,7 +347,6 @@ function renderChapters() {
             const chapterButton = document.createElement('span');
             chapterButton.className = 'chapter-btn';
             
-            // Remove a sigla e mantém apenas o número (ex: 1, 2, 3)
             const chapterNumber = chapterKey.split(' ')[1]; 
             chapterButton.textContent = chapterNumber; 
 
@@ -336,7 +354,6 @@ function renderChapters() {
                 chapterButton.classList.add('read');
             }
 
-            // Adiciona o evento de clique
             chapterButton.onclick = (function(bName, cKey) {
                 return function() {
                     progressData[bName][cKey] = !progressData[bName][cKey];
@@ -380,7 +397,7 @@ function handleImport(event) {
             
             if (confirm("Tem certeza que deseja substituir o progresso atual com o arquivo importado?")) {
                 progressData = importedData;
-                localStorage.setItem('bibleProgress', JSON.stringify(progressData));
+                localStorage.setItem(BIBLE_STORAGE_KEY, JSON.stringify(progressData));
                 updateUI();
                 alert("Progresso importado com sucesso!");
             }

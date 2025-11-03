@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Estrutura da Bíblia</title>
+    <link rel="stylesheet" href="style.css"> 
+    <style>
+        /* Estilos de teste */
+        #testeOutput {
+            background-color: #444;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            white-space: pre-wrap; /* Quebra de linha */
+            font-size: 0.9em;
+        }
+        .passou { color: #66BB6A; font-weight: bold; }
+        .falhou { color: #f44336; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Diagnóstico da Estrutura de Dados</h1>
+    <p>
+        <strong>Resultado:</strong> <span id="status">Verificando...</span>
+    </p>
+
+    <div id="testeOutput">
+        </div>
+    
+    <script src="script.js"></script>
+
+    <script>
+        // --- SCRIPT DE DIAGNÓSTICO LOCAL ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const output = document.getElementById('testeOutput');
+            const statusElement = document.getElementById('status');
+            
+            // Verifica se a variável BIBLE_STRUCTURE foi carregada do script.js
+            if (typeof BIBLE_STRUCTURE === 'undefined') {
+                statusElement.className = 'falhou';
+                statusElement.textContent = "FALHOU: A variável BIBLE_STRUCTURE não foi carregada. Verifique o link do script.js no HTML.";
+                output.textContent = "Erro de carregamento.";
+                return;
+            }
+
+            const totalBooks = Object.keys(BIBLE_STRUCTURE).length;
+            let logContent = `Total de Livros Definidos: ${totalBooks}\n\n`;
+            let allBooksPresent = (totalBooks === 66);
+
+            // Log de todos os livros carregados
+            for (const book in BIBLE_STRUCTURE) {
+                const chapterCount = Object.keys(BIBLE_STRUCTURE[book]).length;
+                logContent += `[OK] ${book}: ${chapterCount} capítulos\n`;
+            }
+            
+            // Checagem final: O último livro deve ser Apocalipse.
+            const lastBook = Object.keys(BIBLE_STRUCTURE).pop();
+
+            if (totalBooks === 66 && lastBook === "APOCALIPSE") {
+                statusElement.className = 'passou';
+                statusElement.textContent = "SUCESSO: A estrutura carregou 66 livros e chegou até APOCALIPSE.";
+            } else {
+                statusElement.className = 'falhou';
+                statusElement.textContent = `FALHOU: Carregou ${totalBooks} livros. Último Livro LIDO pelo script: ${lastBook}.`;
+            }
+            
+            output.textContent = logContent;
+        });
+
+    </script>
+</body>
+</html>
