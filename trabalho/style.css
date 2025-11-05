@@ -1,0 +1,128 @@
+/* --- 1. RESET E ESTILOS GLOBAIS --- */
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap');
+
+/* Usamos 'border-box' para facilitar o layout */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+      font-family: "Google Sans Code", monospace;
+}
+
+body {
+    /* Esquema de cores: Dark Mode Suave (Fundo cinza escuro, Texto branco) */
+    background-color: #1e1e1e; /* Quase preto */
+    color: #f5f5f5; /* Branco suave */
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* --- 2. NAVEGAÇÃO / LISTA --- */
+
+li {
+    list-style: none; /* Remove o marcador de lista */
+    display: flex; /* Alinha os itens lado a lado */
+    gap: 20px;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333; /* Separador sutil */
+}
+
+ul {
+    list-style: none; /* Remove o marcador extra */
+}
+
+a {
+    text-decoration: none; /* Remove o sublinhado */
+    color: #4CAF50; /* Verde vibrante para links */
+    font-weight: 600;
+    transition: color 0.3s;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+a:hover {
+    color: #66BB6A;
+    background-color: #333;
+}
+
+/* --- 3. SEÇÕES DE CÁLCULO --- */
+
+section {
+    background-color: #252526; /* Fundo ligeiramente mais claro que o body */
+    padding: 30px;
+    margin-bottom: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+}
+
+h1 {
+    color: #00bcd4; /* Azul ciano para títulos */
+    margin-bottom: 10px;
+    border-bottom: 1px solid #3a3a3a;
+    padding-bottom: 5px;
+}
+
+p {
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+/* --- 4. ELEMENTOS DE FORMULÁRIO (INPUTS & BOTÕES) --- */
+
+input[type="number"] {
+    padding: 10px 15px;
+    margin-right: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background-color: #3a3a3a;
+    color: #f5f5f5;
+    font-size: 16px;
+    width: 150px; /* Largura fixa para inputs de número */
+    transition: border-color 0.3s;
+}
+
+.matriz input[type="number"]{
+    padding: 2px 2px;
+    margin-right: 2px;
+    margin-bottom: 15px;
+    
+}
+
+input[type="number"]:focus {
+    border-color: #00bcd4; /* Foco vibrante */
+    outline: none;
+}
+
+button {
+    background-color: #4CAF50; /* Cor primária do botão (Verde) */
+    color: #1e1e1e; /* Texto escuro no botão */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #66BB6A; /* Verde mais claro no hover */
+}
+
+
+
+/* --- 5. RESULTADO --- */
+
+span {
+    font-size: 18px;
+    font-weight: 500;
+    margin-top: 15px;
+    display: inline-block; /* Garante que margens funcionem */
+}
+
+#resultado, .resultado {
+    color: #FFA000; /* Laranja/Amarelo para destacar o valor do resultado */
+    font-weight: 700;
+    margin-left: 5px;
+}

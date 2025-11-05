@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matemática Discreta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <li>
+        <ul><a href="#fatorial">Fatorial</a></ul>
+        <ul><a href="#arranjo">Arranjo</a></ul>
+    </li>
+
+
+    <section id="calculo01">
+        <h1>Fatorial</h1>
+        <p>o fatorial é calculado... n!</p>
+        <input type="number" id="fatorial">
+        <button onclick="fatorial()">Calcular</button><br><br>
+        <span>resultado: </span>
+        <span id="rFatorial" class="resultado"> </span>
+    </section>
+
+    <section id="calculo02">
+        <h1>Arranjo</h1>
+        <p>o arranjo é calculado... n!</p>
+        <input type="number" id="arranjoN" placeholder="valor de N">
+        <input type="number" id="arranjoK" placeholder="valor de K">
+        <button onclick="arranjo()">Calcular</button><br><br>
+        <span>resultado: </span>
+        <span id="rArranjo" class="resultado"> </span>
+    </section>
+
+
+    <section id="calculo10" class="matriz">
+        <h1>Matrizes</h1>
+
+        <!-- matriz A -->
+        <input type="number" id="a11" placeholder="a11">
+        <input type="number" id="a12" placeholder="a12">
+        <br>
+        <input type="number" id="a21" placeholder="a21">
+        <input type="number" id="a22" placeholder="a22">
+        <br><br>
+
+        <!-- matriz B -->
+        <input type="number" id="11" placeholder="b11">
+        <input type="number" id="12" placeholder="b12">
+        <br>
+        <input type="number" id="21" placeholder="b21">
+        <input type="number" id="22" placeholder="b22">
+        <br>
+
+
+        <button onclick="matriz()">Calcular</button><br><br>
+        <span>resultado: </span>
+        <span id="rMatriz" class="resultado"> </span>
+    </section>
+
+
+    <script src="./scripts.js"></script>
+</body>
+
+</html>
