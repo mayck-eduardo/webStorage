@@ -37,27 +37,36 @@
 
     <section id="calculo10" class="matriz">
         <h1>Matrizes</h1>
+<div style="display: flex;">
 
-        <!-- matriz A -->
-        <input type="number" id="a11" placeholder="a11">
-        <input type="number" id="a12" placeholder="a12">
-        <br>
-        <input type="number" id="a21" placeholder="a21">
-        <input type="number" id="a22" placeholder="a22">
-        <br><br>
+    <!-- matriz A -->
+     <div>
+         <input type="number" id="a11" placeholder="a11">
+         <input type="number" id="a12" placeholder="a12">
+         <br>
+         <input type="number" id="a21" placeholder="a21">
+         <input type="number" id="a22" placeholder="a22">
+         <br><br>
 
+     </div>
+     <div style="margin: 0 15px; font-size: 24px; align-self: center;">&#215;</div>
+        <div>
         <!-- matriz B -->
-        <input type="number" id="11" placeholder="b11">
-        <input type="number" id="12" placeholder="b12">
+        <input type="number" id="b11" placeholder="b11">
+        <input type="number" id="b12" placeholder="b12">
         <br>
-        <input type="number" id="21" placeholder="b21">
-        <input type="number" id="22" placeholder="b22">
+        <input type="number" id="b21" placeholder="b21">
+        <input type="number" id="b22" placeholder="b22">
         <br>
+    </div>
 
-
+</div>
         <button onclick="matriz()">Calcular</button><br><br>
+
         <span>resultado: </span>
-        <span id="rMatriz" class="resultado"> </span>
+        <div id="rMatriz" class="resultado"></div>
+            <span id="r11"> </span> <span id="r12"> </span><br>
+            <span id="r21"> </span> <span id="r22"> </span>
     </section>
 
 
