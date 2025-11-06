@@ -3,27 +3,23 @@ import { View, Text, StyleSheet, ActivityIndicator, Dimensions } from 'react-nat
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
-import { db, auth, appId } from '../../firebaseConfig';
-import { LineChart } from 'react-native-gifted-charts'; // 1. Importa o gráfico
+import { db, auth, appId } from '../../firebaseConfig'; 
+import { LineChart } from 'react-native-gifted-charts';
 
-// Interface para o log
 interface Log {
   id: string;
   weight: number;
   reps: number;
   createdAt: { seconds: number; nanoseconds: number; } | null;
 }
-
-// Interface para os dados do gráfico
 interface ChartData {
-  value: number; // O peso (eixo Y)
-  label: string; // A data (eixo X)
+  value: number; 
+  label: string; 
 }
 
-const { width } = Dimensions.get('window'); // Pega a largura da tela
+const { width } = Dimensions.get('window'); 
 
 export default function ChartScreen() {
-  // 2. Pega os parâmetros passados (ID da Ficha, ID do Exercício, Nome)
   const { routineId, exerciseId, name } = useLocalSearchParams<{
     routineId: string;
     exerciseId: string;
@@ -32,42 +28,35 @@ export default function ChartScreen() {
 
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  
+  const userId = auth.currentUser?.uid; 
 
-  useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
-      setUserId(user ? user.uid : null);
-    });
-    return () => unsubscribeAuth();
-  }, []);
-
-  // 3. Função para formatar a data
   const formatDate = (timestamp: Log['createdAt']) => {
     if (!timestamp) return '...';
     const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   };
 
-  // 4. Efeito para buscar TODOS os logs
   useEffect(() => {
-    if (!userId || !routineId || !exerciseId) return;
+    if (!userId || !routineId || !exerciseId) {
+      setLoading(false);
+      return;
+    }
 
     const fetchLogs = async () => {
       setLoading(true);
       const logCollection = collection(
         db, 'artifacts', appId, 'users', userId, 'routines', routineId, 'exercises', exerciseId, 'logs'
       );
-      // Busca todos, ordenados do mais ANTIGO para o mais NOVO
       const q = query(logCollection, orderBy('createdAt', 'asc'));
 
       try {
         const querySnapshot = await getDocs(q);
         const logsData = querySnapshot.docs.map(doc => ({ ...doc.data() } as Log));
 
-        // 5. Formata os dados para o gráfico
         const dataForChart: ChartData[] = logsData.map(log => ({
-          value: log.weight, // Eixo Y é o peso
-          label: formatDate(log.createdAt), // Eixo X é a data
+          value: log.weight,
+          label: formatDate(log.createdAt),
         }));
 
         setChartData(dataForChart);
@@ -78,7 +67,7 @@ export default function ChartScreen() {
     };
 
     fetchLogs();
-  }, [userId, routineId, exerciseId]);
+  }, [userId, routineId, exerciseId]); 
 
   return (
     <SafeAreaView style={styles.container}>
@@ -89,32 +78,25 @@ export default function ChartScreen() {
         {loading ? (
           <ActivityIndicator size="large" color="#FFFFFF" style={{ marginTop: 50 }} />
         ) : chartData.length < 2 ? (
-          // 6. Mensagem se não houver dados suficientes
           <Text style={styles.emptyText}>
             Você precisa de pelo menos 2 registros para ver um gráfico.
           </Text>
         ) : (
-          // 7. O Gráfico
           <View style={styles.chartContainer}>
             <LineChart
               data={chartData}
               height={250}
-              width={width - 80} // Ajusta largura
-              color="#007AFF" // Cor da linha
+              width={width - 80} 
+              color="#007AFF" 
               thickness={3}
-              // Pontos
               dataPointsColor="#FFFFFF"
               dataPointsRadius={5}
-              // Labels do Eixo X (Datas)
               xAxisLabelTextStyle={styles.axisLabel}
               xAxisColor="#555"
-              // Labels do Eixo Y (Pesos)
               yAxisLabelTextStyle={styles.axisLabel}
               yAxisColor="#555"
               yAxisTextStyle={styles.axisLabel}
-              // Linhas de fundo
               rulesColor="#333"
-              // Pop-up ao tocar no ponto
               showDataPointOnFocus
               focusEnabled
               dataPointLabelShiftY={-20}
@@ -132,6 +114,7 @@ export default function ChartScreen() {
   );
 }
 
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,

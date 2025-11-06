@@ -12,10 +12,11 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable, 
 } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, Link, useNavigation } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// 1. IMPORTAÇÕES NOVAS: getDocs, orderBy, limit
+// 1. Importações RE-ADICIONADAS
 import {
   collection,
   onSnapshot,
@@ -23,60 +24,85 @@ import {
   doc,
   addDoc,
   serverTimestamp,
-  getDocs, // Para buscar o histórico
-  orderBy, // Para ordenar o histórico
-  limit, // Para limitar a 5 itens
+  getDocs,
+  orderBy,
+  limit,
+  deleteDoc, 
+  writeBatch,
+  updateDoc // 2. IMPORTAR 'updateDoc' para o check
 } from 'firebase/firestore';
 import { db, auth, appId } from '../../firebaseConfig';
+import { FontAwesome } from '@expo/vector-icons'; // RE-ADICIONADO
 
+// 3. NOVO CAMPO 'lastCompleted'
 interface Exercise {
   id: string;
   name: string;
   sets: string;
-  order?: number;
+  createdAt?: { seconds: number };
+  lastCompleted?: { seconds: number }; // Armazena o último check
 }
-
-// 2. TIPO PARA O LOG DO HISTÓRICO
 interface Log {
   id: string;
   weight: number;
   reps: number;
-  createdAt: {
-    seconds: number;
-    nanoseconds: number;
-  } | null; // O Firestore 'timestamp'
+  createdAt: { seconds: number; nanoseconds: number; } | null;
 }
+
+// 4. Função para verificar se é hoje
+const isToday = (timestamp: { seconds: number } | undefined) => {
+  if (!timestamp) return false;
+  const date = new Date(timestamp.seconds * 1000);
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+};
 
 export default function RoutineScreen() {
   const { id: routineId, name } = useLocalSearchParams<{ id: string; name: string }>();
+  const navigation = useNavigation(); 
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  
+  const userId = auth.currentUser?.uid;
 
-  const [modalVisible, setModalVisible] = useState(false);
+  // Modal de LOG
+  const [logModalVisible, setLogModalVisible] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
-
-  // --- 3. ESTADOS NOVOS PARA O HISTÓRICO ---
   const [history, setHistory] = useState<Log[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  // ------------------------------------
+  const [saveLogLoading, setSaveLogLoading] = useState(false); 
 
+  // Modal de Exercício (RE-ADICIONADO)
+  const [exerciseModalVisible, setExerciseModalVisible] = useState(false);
+  const [newExerciseName, setNewExerciseName] = useState('');
+  const [newExerciseSets, setNewExerciseSets] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null); // Para deletar ou dar check
+
+  // Adicionar botão "+" no header (RE-ADICIONADO)
   useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
-      setUserId(user ? user.uid : null);
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setExerciseModalVisible(true)} style={{ padding: 8 }}>
+          <Text style={{ color: '#007AFF', fontSize: 30, fontWeight: 'bold' }}>+</Text>
+        </TouchableOpacity>
+      ),
     });
-    return () => unsubscribeAuth();
-  }, []);
+  }, [navigation]); 
 
+  // Buscar exercícios (agora inclui 'lastCompleted')
   useEffect(() => {
-    if (!userId || !routineId) return;
+    if (!userId || !routineId) {
+      setLoading(false);
+      return;
+    };
     setLoading(true);
 
     const exercisesCollection = collection(db, 'artifacts', appId, 'users', userId, 'routines', routineId, 'exercises');
-    const q = query(exercisesCollection); // TODO: Adicionar orderBy("order")
+    const q = query(exercisesCollection, orderBy("createdAt", "asc")); 
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const exercisesData: Exercise[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Exercise));
@@ -86,21 +112,20 @@ export default function RoutineScreen() {
       console.error("Erro ao buscar exercícios: ", error);
       setLoading(false);
     });
-
+    
     return () => unsubscribe();
   }, [userId, routineId]);
 
-  // --- 4. FUNÇÃO ATUALIZADA (agora é async) ---
+  // Abrir Modal de Log (sem mudança)
   const handleOpenModal = async (exercise: Exercise) => {
     setSelectedExercise(exercise);
     setWeight('');
     setReps('');
-    setHistoryLoading(true); // Começa a carregar o histórico
-    setModalVisible(true);
+    setHistoryLoading(true); 
+    setLogModalVisible(true);
 
-    if (!userId || !routineId) return;
+    if (!userId || !routineId) return; 
 
-    // 5. Busca os últimos 5 logs para este exercício
     const logCollection = collection(
       db, 'artifacts', appId, 'users', userId, 'routines', routineId, 'exercises', exercise.id, 'logs'
     );
@@ -108,48 +133,124 @@ export default function RoutineScreen() {
 
     try {
       const querySnapshot = await getDocs(q);
-      const logsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Log));
+      const logsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Log));
       setHistory(logsData);
     } catch (error) {
       console.error("Erro ao buscar histórico: ", error);
-      Alert.alert("Erro", "Não foi possível carregar o histórico.");
     }
-    setHistoryLoading(false); // Termina de carregar
+    setHistoryLoading(false); 
   };
 
+  // Salvar Log (sem mudança)
   const handleSaveLog = async () => {
     if (!userId || !routineId || !selectedExercise || !weight || !reps) {
       Alert.alert("Erro", "Preencha o peso e as repetições.");
       return;
     }
-
+    setSaveLogLoading(true); 
     try {
       const logCollection = collection(
         db, 'artifacts', appId, 'users', userId, 'routines', routineId, 'exercises', selectedExercise.id, 'logs'
       );
-
       await addDoc(logCollection, {
         weight: parseFloat(weight),
         reps: parseInt(reps, 10),
         createdAt: serverTimestamp(),
       });
-
-      setModalVisible(false);
-      Alert.alert("Sucesso", "Treino registrado!");
-
+      handleOpenModal(selectedExercise); 
+      setWeight('');
+      setReps('');
     } catch (error) {
       console.error("Erro ao salvar log: ", error);
       Alert.alert("Erro", "Não foi possível salvar o registro.");
     }
+    setSaveLogLoading(false); 
   };
 
-  // 6. Função para formatar a data (opcional, mas útil)
+  // Salvar Exercício (RE-ADICIONADO)
+  const handleSaveExercise = async () => {
+    if (!userId || !routineId || !newExerciseName || !newExerciseSets) {
+      Alert.alert("Erro", "Preencha o nome e as séries.");
+      return;
+    }
+    setSaveLoading(true);
+    try {
+      const exercisesCollection = collection(db, 'artifacts', appId, 'users', userId, 'routines', routineId, 'exercises');
+      await addDoc(exercisesCollection, {
+        name: newExerciseName,
+        sets: newExerciseSets,
+        createdAt: serverTimestamp() 
+      });
+      setNewExerciseName('');
+      setNewExerciseSets('');
+      setExerciseModalVisible(false);
+    } catch (error) {
+      console.error("Erro ao salvar exercício: ", error);
+      Alert.alert("Erro", "Não foi possível salvar o exercício.");
+    }
+    setSaveLoading(false);
+  };
+
+  // Deletar Exercício (RE-ADICIONADO)
+  const handleDeleteExercise = (exerciseId: string) => {
+    if (!userId || !routineId) return;
+
+    Alert.alert(
+      "Deletar Exercício",
+      "Tem certeza que deseja deletar este exercício? TODOS os logs de progresso serão apagados.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Deletar",
+          style: "destructive",
+          onPress: async () => {
+            setActionLoading(exerciseId);
+            try {
+              const exerciseRef = doc(db, 'artifacts', appId, 'users', userId, 'routines', routineId, 'exercises', exerciseId);
+              
+              const logsCollection = collection(exerciseRef, 'logs');
+              const logsSnapshot = await getDocs(logsCollection);
+              const batch = writeBatch(db);
+              logsSnapshot.forEach(logDoc => {
+                batch.delete(logDoc.ref);
+              });
+              
+              batch.delete(exerciseRef);
+              await batch.commit();
+
+            } catch (error) {
+              console.error("Erro ao deletar exercício: ", error);
+              Alert.alert("Erro", "Não foi possível deletar o exercício.");
+            }
+            setActionLoading(null);
+          }
+        }
+      ]
+    );
+  };
+
+  // 5. NOVA FUNÇÃO DE CHECK
+  const handleToggleCheck = async (exercise: Exercise) => {
+    if (!userId || !routineId) return;
+
+    const exerciseRef = doc(db, 'artifacts', appId, 'users', userId, 'routines', routineId, 'exercises', exercise.id);
+    const completed = isToday(exercise.lastCompleted);
+    
+    setActionLoading(exercise.id); // Reutiliza o loading
+    try {
+      await updateDoc(exerciseRef, {
+        lastCompleted: completed ? null : serverTimestamp() // Se já estava feito, desmarca. Senão, marca.
+      });
+    } catch (error) {
+      console.error("Erro ao marcar exercício: ", error);
+      Alert.alert("Erro", "Não foi possível atualizar o exercício.");
+    }
+    setActionLoading(null);
+  };
+
+  // formatDate (sem mudança)
   const formatDate = (timestamp: Log['createdAt']) => {
     if (!timestamp) return '...';
-    // Converte o timestamp do Firestore para um Date
     const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   };
@@ -162,26 +263,82 @@ export default function RoutineScreen() {
         }}
       />
 
+      {/* Modal para adicionar exercício (RE-ADICIONADO) */}
       <Modal
         animationType="slide"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        visible={exerciseModalVisible}
+        onRequestClose={() => setExerciseModalVisible(false)}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Registrar Treino</Text>
-            <Text style={styles.modalSubtitle}>{selectedExercise?.name}</Text>
+            <Text style={styles.modalTitle}>Novo Exercício</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nome (Ex: Supino Reto)"
+              placeholderTextColor="#777"
+              value={newExerciseName}
+              onChangeText={setNewExerciseName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Séries (Ex: 4x 12,10,8,6)"
+              placeholderTextColor="#777"
+              value={newExerciseSets}
+              onChangeText={setNewExerciseSets}
+            />
+            {saveLoading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <View style={styles.buttonContainer}>
+                <Pressable onPress={() => setExerciseModalVisible(false)}>
+                  <Text style={styles.logoutText}>Cancelar</Text>
+                </Pressable>
+                <TouchableOpacity style={styles.buttonSmall} onPress={handleSaveExercise}>
+                  <Text style={styles.buttonText}>Salvar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Modal de LOG (sem mudança) */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={logModalVisible} 
+        onRequestClose={() => setLogModalVisible(false)} 
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{selectedExercise?.name}</Text>
             
-            {/* --- 7. UI DO HISTÓRICO --- */}
+            <Link
+              href={{
+                pathname: `/charts/${selectedExercise?.id}`,
+                params: { 
+                  routineId: routineId, 
+                  name: selectedExercise?.name 
+                },
+              }}
+              asChild
+            >
+              <TouchableOpacity style={styles.chartLink}>
+                <Text style={styles.chartLinkText}>Ver Gráfico de Evolução</Text>
+              </TouchableOpacity>
+            </Link>
+
             <Text style={styles.historyTitle}>Últimos 5 Registros:</Text>
             {historyLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              // Usamos .map() pois é uma lista curta (máx 5)
               history.length === 0 ? (
                 <Text style={styles.historyEmpty}>Nenhum registro anterior.</Text>
               ) : (
@@ -197,7 +354,6 @@ export default function RoutineScreen() {
                 ))
               )
             )}
-            {/* --------------------------- */}
 
             <View style={styles.separator} />
 
@@ -222,37 +378,71 @@ export default function RoutineScreen() {
             </View>
 
             <View style={styles.buttonContainer}>
-              <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#FF4500" />
-              <Button title="Salvar" onPress={handleSaveLog} />
+              <Button title="Fechar" onPress={() => setLogModalVisible(false)} color="#FF4500" />
+              {saveLogLoading ? (
+                <ActivityIndicator color="#007AFF" />
+              ) : (
+                <Button title="Salvar" onPress={handleSaveLog} />
+              )}
             </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* A Lista de Exercícios (igual a antes) */}
+      {/* A Lista de Exercícios (Atualizada com botão deletar e check) */}
       {loading ? (
         <ActivityIndicator size="large" color="#FFFFFF" style={{ marginTop: 50 }} />
       ) : (
         <FlatList
           data={exercises}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardSets}>{item.sets}</Text>
+          renderItem={({ item }) => {
+            const completed = isToday(item.lastCompleted); // 6. Verifica se está completo
+            return (
+              <View style={styles.cardContainer}>
+                {/* 7. BOTÃO DE CHECK */}
+                <TouchableOpacity 
+                  style={styles.checkButton}
+                  onPress={() => handleToggleCheck(item)}
+                  disabled={actionLoading === item.id}
+                >
+                  <FontAwesome 
+                    name={completed ? "check-square" : "square-o"} 
+                    size={28} 
+                    color={completed ? "#4CD964" : "#555"} // Verde se completo
+                  />
+                </TouchableOpacity>
+                
+                <View style={styles.card}>
+                  <View style={styles.cardInfo}>
+                    <Text style={[styles.cardTitle, completed && styles.completedText]}>{item.name}</Text>
+                    <Text style={[styles.cardSets, completed && styles.completedText]}>{item.sets}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.logButton} onPress={() => handleOpenModal(item)}>
+                    <Text style={styles.logButtonText}>Registrar</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Botão Deletar (RE-ADICIONADO) */}
+                <TouchableOpacity 
+                  style={styles.deleteButton} 
+                  onPress={() => handleDeleteExercise(item.id)}
+                  disabled={actionLoading === item.id} 
+                >
+                  {actionLoading === item.id ? 
+                    <ActivityIndicator size="small" color="#FF4500" /> :
+                    <FontAwesome name="trash" size={24} color="#FF4500" />
+                  }
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.logButton} onPress={() => handleOpenModal(item)}>
-                <Text style={styles.logButtonText}>Registrar</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            )
+          }}
           ListHeaderComponent={
             <Text style={styles.header}>Exercícios de Hoje:</Text>
           }
           contentContainerStyle={{ padding: 20 }}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhum exercício encontrado.</Text>
+            <Text style={styles.emptyText}>Nenhum exercício encontrado. Clique no + para adicionar.</Text>
           }
         />
       )}
@@ -260,7 +450,7 @@ export default function RoutineScreen() {
   );
 }
 
-// --- 8. ESTILOS ATUALIZADOS ---
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -272,16 +462,31 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 20,
   },
+  cardContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  // 8. NOVO BOTÃO DE CHECK
+  checkButton: {
+    paddingRight: 15,
+    paddingLeft: 5,
+  },
   card: {
     backgroundColor: '#1E1E1E',
     padding: 20,
     borderRadius: 12,
-    marginBottom: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#333',
+    flex: 1, 
+  },
+  deleteButton: {
+    padding: 20,
+    width: 60,
+    alignItems: 'center',
   },
   cardInfo: {
     flex: 1,
@@ -295,6 +500,11 @@ const styles = StyleSheet.create({
   cardSets: {
     fontSize: 16,
     color: '#B0B0B0',
+  },
+  // 9. NOVO ESTILO PARA TEXTO COMPLETO
+  completedText: {
+    textDecorationLine: 'line-through',
+    color: '#555',
   },
   logButton: {
     backgroundColor: '#007AFF',
@@ -336,7 +546,18 @@ const styles = StyleSheet.create({
     color: '#B0B0B0',
     marginBottom: 20,
   },
-  // --- Estilos do Histórico ---
+  chartLink: {
+    backgroundColor: '#333',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  chartLinkText: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   historyTitle: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -363,7 +584,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#444',
     marginVertical: 16,
   },
-  // --- Estilos dos Inputs ---
   inputLabel: {
     fontSize: 16,
     color: '#FFFFFF',
@@ -373,19 +593,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  input: {
+  input: { 
     backgroundColor: '#3A3A3A',
     color: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
     fontSize: 16,
+    marginBottom: 10, 
   },
   inputHalf: {
-    width: '48%', // Inputs lado a lado
+    width: '48%',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignItems: 'center', 
     marginTop: 24,
+  },
+  buttonSmall: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  logoutText: {
+    color: '#FF4500',
+    fontSize: 16,
   },
 });

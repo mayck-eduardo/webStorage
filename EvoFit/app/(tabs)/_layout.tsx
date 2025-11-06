@@ -1,57 +1,47 @@
+import { FontAwesome } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: false, 
+        tabBarActiveTintColor: '#007AFF', 
+        tabBarInactiveTintColor: '#8E8E93', 
+        tabBarStyle: {
+          backgroundColor: '#1E1E1E', 
+          borderTopColor: '#333',
+        },
       }}>
+      {/* 1. Tela de Fichas (existente) */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+          title: 'Fichas',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="list-alt" size={24} color={color} />
           ),
         }}
       />
+      {/* 2. Tela de Treino do Dia (existente) */}
       <Tabs.Screen
-        name="two"
+        name="workout" 
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Treino do Dia',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="clipboard" size={24} color={color} />
+          ),
+        }}
+      />
+      {/* 3. NOVA Tela de Edição */}
+      <Tabs.Screen
+        name="edit" // Nome do novo arquivo: edit.tsx
+        options={{
+          title: 'Editar',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="pencil" size={24} color={color} />
+          ),
         }}
       />
     </Tabs>

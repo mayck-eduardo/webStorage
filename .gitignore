@@ -1,0 +1,44 @@
+# DEPENDÊNCIAS DO NODE
+/node_modules
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/package-lock.json
+
+# ARQUIVOS E PASTAS DO EXPO/REACT NATIVE
+/.expo/
+/dist/
+/web-build/
+/.idea/
+/.DS_Store
+/ios/build/
+/android/build/
+/android/.gradle
+/local.properties
+/Podfile.lock
+/DerivedData
+/node_modules/
+
+
+# PASTA PARA BUILD DE PROJETOS C
+# Ignora pastas de build comuns para C, como "build" e "bin"
+build/
+bin/
+/out/
+/lib/
+/tmp/
+
+# ARQUIVOS DE OBJETO E EXECUTÁVEIS DO C (GERADOS NA COMPILAÇÃO)
+# Arquivos de objeto e de bibliotecas estáticas/dinâmicas
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.lib
+
+# Executáveis (Windows, Linux, macOS)
+*.exe
+*.out
+a.out
+*.app

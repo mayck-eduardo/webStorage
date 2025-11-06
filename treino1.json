@@ -1,0 +1,194 @@
+{
+  "routines": [
+    {
+      "name": "1. Segunda-feira: Peito/Tríceps/Trapézio",
+      "exercises": [
+        {
+          "name": "Supino Reto com Halteres",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Supino Inclinado Máquina",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Crucifixo na Máquina",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Supino Declinado",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Tríceps Testa com Halter",
+          "sets": "4x 12 (Drop na Última)",
+          "logs": []
+        },
+        {
+          "name": "Tríceps Polia Alta",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Tríceps Máquina",
+          "sets": "5x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Encolhimento de Trapézio Polia",
+          "sets": "6x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "name": "2. Terça-feira: Costas/Bíceps/Trapézio",
+      "exercises": [
+        {
+          "name": "Hipertensão de Tronco na Máquina",
+          "sets": "3x 15 (Peso do Corpo)",
+          "logs": []
+        },
+        {
+          "name": "Puxada Frente",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Remada Baixa",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Serrote (Joelhos apoiados no banco)",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Rosca na Máquina",
+          "sets": "5x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Rosca Martelo com Halteres",
+          "sets": "5x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Rosca Alternada no Banco Inclinado",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "name": "3. Quarta-feira: Quadríceps/Trapézio",
+      "exercises": [
+        {
+          "name": "Cadeira Extensora",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Agachamento no Hack",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Leg Press 45",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Cadeira Adutora",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Panturrilha Sentado",
+          "sets": "5x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Panturrilha no Leg 180º",
+          "sets": "5x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Encolhimento de Trapézio com Halteres",
+          "sets": "6x 12 (Carga Fixa)",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "name": "4. Quinta-feira: Ombros",
+      "exercises": [
+        {
+          "name": "Desenvolvimento na Máquina",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Elevação Lateral em Pé",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Elevação Lateral Polia",
+          "sets": "4x 10 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Elevação Frontal (Corda)",
+          "sets": "4x 10 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Elevação Frontal (Halteres)",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        },
+        {
+          "name": "Crucifixo Inverso na Máquina",
+          "sets": "4x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        }
+      ]
+    },
+    {
+      "name": "5. Sexta-feira: Posterior/Glúteos",
+      "exercises": [
+        {
+          "name": "Stiff com Barra",
+          "sets": "3x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Cadeira Flexora",
+          "sets": "4x 12 (Rest in Pause)",
+          "logs": []
+        },
+        {
+          "name": "Mesa Flexora",
+          "sets": "4x 12 (Carga Fixa)",
+          "logs": []
+        },
+        {
+          "name": "Flexora Unilateral",
+          "sets": "4x 12 (Rest in Pause)",
+          "logs": []
+        },
+        {
+          "name": "Elevação Pélvica na Máquina",
+          "sets": "5x 15,12,10,8 (Progressão de Carga)",
+          "logs": []
+        }
+      ]
+    }
+  ]
+}
